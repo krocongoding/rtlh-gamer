@@ -1,109 +1,94 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800">
-                Master Wilayah
-            </h2>
+        <div>
+            <div class="kicker">
+                <i class="fa-solid fa-map-pin"></i> DATA MASTER
+            </div>
+            <h1>Wilayah Administratif</h1>
+            <p class="muted">
+                Daftar kecamatan dan desa/kelurahan di lingkungan Pemerintah Kabupaten Cirebon.
+            </p>
+        </div>
 
-            <a
-                href="{{ route('regions.create') }}"
-                class="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700"
-            >
-                + Tambah Wilayah
+        <div class="actions">
+            <a href="{{ route('regions.create') }}" class="btn primary">
+                <i class="fa-solid fa-plus"></i> Tambah Wilayah
             </a>
         </div>
     </x-slot>
 
-    <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div class="card" style="padding:0; overflow:hidden;">
+        <div style="padding: 18px 24px; border-bottom: 1px solid var(--slate-200); background: var(--slate-50); display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h3 style="font-size:16px; font-weight:800; color:var(--slate-900); margin:0;">
+                    Tabel Wilayah
+                </h3>
+            </div>
+            <span class="badge published">
+                Total {{ number_format($regions->total()) }} Wilayah
+            </span>
+        </div>
 
-            @if (session('success'))
-                <div class="mb-6 rounded-md bg-green-50 p-4 text-green-700">
-                    {{ session('success') }}
+        <div class="tablewrap" style="border:none; border-radius:0;">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">No</th>
+                        <th style="width: 140px;">Kode Wilayah</th>
+                        <th>Nama Wilayah</th>
+                        <th>Tipe</th>
+                        <th>Level</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($regions as $region)
+                        <tr>
+                            <td class="muted">{{ $regions->firstItem() + $loop->index }}</td>
+                            <td>
+                                <code style="background:var(--slate-100); padding:2px 6px; border-radius:4px; font-size:12px; font-weight:700;">{{ $region->code }}</code>
+                            </td>
+                            <td>
+                                <strong style="color:var(--slate-900);">{{ $region->name }}</strong>
+                            </td>
+                            <td>
+                                <span class="badge" style="background:var(--slate-100); color:var(--slate-700);">
+                                    {{ ucfirst($region->type) }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge" style="background:#e0f2fe; color:#0369a1;">
+                                    Level {{ $region->level }}
+                                </span>
+                            </td>
+                            <td>
+                                @if($region->is_active)
+                                    <span class="badge published"><i class="fa-solid fa-circle-check"></i> Aktif</span>
+                                @else
+                                    <span class="badge draft">Nonaktif</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" style="text-align:center; padding:48px 24px;" class="muted">
+                                Belum ada data wilayah.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if($regions->hasPages())
+            <div style="padding: 16px 24px; border-top: 1px solid var(--slate-200); background: var(--slate-50); display:flex; justify-content:space-between; align-items:center;">
+                <div class="muted" style="font-size:13px;">
+                    Halaman {{ $regions->currentPage() }} dari {{ $regions->lastPage() }}
                 </div>
-            @endif
-
-            <div class="bg-white shadow-sm sm:rounded-lg p-6">
-
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-
-                        <thead>
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                    No
-                                </th>
-
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                    Kode
-                                </th>
-
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                    Nama Wilayah
-                                </th>
-
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                    Tipe
-                                </th>
-
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                    Level
-                                </th>
-
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                    Status
-                                </th>
-                            </tr>
-                        </thead>
-
-                        <tbody class="divide-y divide-gray-200">
-
-                            @forelse ($regions as $region)
-                                <tr>
-                                    <td class="px-4 py-3 text-sm text-gray-700">
-                                        {{ $regions->firstItem() + $loop->index }}
-                                    </td>
-
-                                    <td class="px-4 py-3 text-sm font-medium text-gray-900">
-                                        {{ $region->code }}
-                                    </td>
-
-                                    <td class="px-4 py-3 text-sm text-gray-700">
-                                        {{ $region->name }}
-                                    </td>
-
-                                    <td class="px-4 py-3 text-sm text-gray-700">
-                                        {{ $region->type }}
-                                    </td>
-
-                                    <td class="px-4 py-3 text-sm text-gray-700">
-                                        {{ $region->level }}
-                                    </td>
-
-                                    <td class="px-4 py-3 text-sm">
-                                        {{ $region->is_active ? 'Aktif' : 'Nonaktif' }}
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td
-                                        colspan="6"
-                                        class="px-4 py-8 text-center text-gray-500"
-                                    >
-                                        Belum ada data wilayah.
-                                    </td>
-                                </tr>
-                            @endforelse
-
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="mt-6">
+                <div>
                     {{ $regions->links() }}
                 </div>
-
             </div>
-        </div>
+        @endif
     </div>
 </x-app-layout>

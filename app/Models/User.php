@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -54,5 +55,20 @@ class User extends Authenticatable
         return $this->roles()
             ->whereIn('slug', $roles)
             ->exists();
+    }
+
+    public function houses(): HasMany
+    {
+        return $this->hasMany(House::class, 'created_by');
+    }
+
+    public function assessments(): HasMany
+    {
+        return $this->hasMany(RtlhAssessment::class, 'assessor_id');
+    }
+
+    public function auditLogs(): HasMany
+    {
+        return $this->hasMany(AuditLog::class, 'user_id');
     }
 }

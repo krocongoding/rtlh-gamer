@@ -1,136 +1,138 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Data RTLH
-        </h2>
+        <div>
+            <div class="kicker">
+                <i class="fa-solid fa-folder-tree"></i> BASIS DATA INTERNAL
+            </div>
+            <h1>Manajemen Data RTLH</h1>
+            <p class="muted">
+                Daftar lengkap rumah tidak layak huni Kabupaten Cirebon beserta status verifikasi dan survei.
+            </p>
+        </div>
+
+        <div class="actions">
+            <a href="{{ route('houses.create') }}" class="btn primary">
+                <i class="fa-solid fa-plus"></i> Tambah Data Rumah
+            </a>
+        </div>
     </x-slot>
 
-    <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    {{-- SEARCH & FILTER CARD --}}
+    <div class="card" style="margin-bottom: 24px;">
+        <form method="GET" action="{{ route('houses.index') }}">
+            <div class="toolbar">
+                <div style="flex:1; min-width:260px; position:relative;">
+                    <input
+                        type="text"
+                        name="search"
+                        value="{{ request('search') }}"
+                        placeholder="Cari kode rumah, alamat, atau blok..."
+                        style="padding-left:36px;"
+                    >
+                    <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--slate-400);"></i>
+                </div>
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
+                <button type="submit" class="btn primary">
+                    <i class="fa-solid fa-magnifying-glass"></i> Cari
+                </button>
 
-                    <div class="flex items-center justify-between mb-6">
-                        <a
-                            href="{{ route('houses.create') }}"
-                            class="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700">
-                            + Tambah Rumah
-                        </a>
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-900">
-                                Daftar Rumah
-                            </h3>
+                @if(request('search'))
+                    <a href="{{ route('houses.index') }}" class="btn">
+                        <i class="fa-solid fa-rotate-left"></i> Reset
+                    </a>
+                @endif
+            </div>
+        </form>
+    </div>
 
-                            <p class="text-sm text-gray-500">
-                                Data Rumah Tidak Layak Huni Kabupaten Cirebon
-                            </p>
-                        </div>
-                    </div>
+    {{-- TABLE DATA CARD --}}
+    <div class="card" style="padding:0; overflow:hidden;">
+        <div style="padding: 18px 24px; border-bottom: 1px solid var(--slate-200); background: var(--slate-50); display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h3 style="font-size:16px; font-weight:800; color:var(--slate-900); margin:0;">
+                    Daftar Unit Rumah
+                </h3>
+            </div>
+            <span class="badge published">
+                Total {{ number_format($houses->total()) }} Unit
+            </span>
+        </div>
 
-                    <form method="GET" action="{{ route('houses.index') }}" class="mb-6">
-                        <div class="flex gap-2">
-                            <input
-                                type="text"
-                                name="search"
-                                value="{{ request('search') }}"
-                                placeholder="Cari kode rumah atau alamat..."
-                                class="w-full rounded-md border-gray-300"
-                            >
+        <div class="tablewrap" style="border:none; border-radius:0;">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">No</th>
+                        <th style="width: 150px;">Kode Rumah</th>
+                        <th>Wilayah</th>
+                        <th>Alamat / Blok</th>
+                        <th>Tahun</th>
+                        <th>Status</th>
+                        <th style="text-align: right; width: 140px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($houses as $house)
+                        <tr>
+                            <td class="muted">{{ $houses->firstItem() + $loop->index }}</td>
+                            <td>
+                                <strong style="font-family:monospace; font-size:14px; color:var(--slate-900);">
+                                    {{ $house->house_code }}
+                                </strong>
+                            </td>
+                            <td>
+                                <span class="badge" style="background:var(--slate-100); color:var(--slate-700);">
+                                    <i class="fa-solid fa-location-dot"></i> {{ $house->region?->name ?? '-' }}
+                                </span>
+                            </td>
+                            <td>
+                                {{ $house->address ?: ($house->block ? 'Blok ' . $house->block : '-') }}
+                            </td>
+                            <td>
+                                <span class="badge" style="background:#e0f2fe; color:#0369a1;">
+                                    {{ $house->survey_year ?? '-' }}
+                                </span>
+                            </td>
+                            <td>
+                                @if($house->status === 'published')
+                                    <span class="badge published"><i class="fa-solid fa-check"></i> Published</span>
+                                @elseif($house->status === 'verified')
+                                    <span class="badge" style="background:#ede9fe; color:#6d28d9;"><i class="fa-solid fa-circle-check"></i> Verified</span>
+                                @elseif($house->status === 'submitted')
+                                    <span class="badge submitted"><i class="fa-solid fa-hourglass-half"></i> Submitted</span>
+                                @elseif($house->status === 'revision')
+                                    <span class="badge revision"><i class="fa-solid fa-rotate-left"></i> Revisi</span>
+                                @else
+                                    <span class="badge draft">{{ ucfirst($house->status) }}</span>
+                                @endif
+                            </td>
+                            <td style="text-align: right;">
+                                <a href="{{ route('houses.show', $house) }}" class="btn small primary">
+                                    <i class="fa-solid fa-eye"></i> Detail
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" style="text-align:center; padding:48px 24px;" class="muted">
+                                <i class="fa-solid fa-folder-open fa-2x" style="color:var(--slate-300); margin-bottom:10px;"></i>
+                                <p>Belum ada data unit rumah RTLH yang tercatat.</p>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
-                            <button
-                                type="submit"
-                                class="px-4 py-2 bg-gray-800 text-white rounded-md"
-                            >
-                                Cari
-                            </button>
-                        </div>
-                    </form>
-
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead>
-                                <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                        No
-                                    </th>
-
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                        Kode Rumah
-                                    </th>
-
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                        Alamat
-                                    </th>
-
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                        Wilayah
-                                    </th>
-
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                        Tahun
-                                    </th>
-
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                        Status
-                                    </th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                                        Aksi
-                                    </th>
-                                </tr>
-                            </thead>
-
-                            <tbody class="divide-y divide-gray-200">
-                                @forelse ($houses as $house)
-                                    <tr>
-                                        <td class="px-4 py-3 text-sm text-gray-700">
-                                            {{ $houses->firstItem() + $loop->index }}
-                                        </td>
-
-                                        <td class="px-4 py-3 text-sm font-medium text-gray-900">
-                                            {{ $house->house_code }}
-                                        </td>
-
-                                        <td class="px-4 py-3 text-sm text-gray-700">
-                                            {{ $house->address ?? '-' }}
-                                        </td>
-
-                                        <td class="px-4 py-3 text-sm text-gray-700">
-                                            {{ $house->region?->name ?? '-' }}
-                                        </td>
-
-                                        <td class="px-4 py-3 text-sm text-gray-700">
-                                            {{ $house->survey_year }}
-                                        </td>
-
-                                        <td class="px-4 py-3 text-sm">
-                                            {{ $house->status }}
-                                        </td>
-                                        <td class="px-4 py-3 text-sm">
-                                            <a href="{{ route('houses.show', $house) }}"
-                                            class="text-blue-600 hover:text-blue-800 font-medium">
-                                            Detail
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="7  " class="px-4 py-8 text-center text-gray-500">
-                                            Belum ada data RTLH.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="mt-6">
-                        {{ $houses->links() }}
-                    </div>
-
+        @if($houses->hasPages())
+            <div style="padding: 16px 24px; border-top: 1px solid var(--slate-200); background: var(--slate-50); display:flex; justify-content:space-between; align-items:center;">
+                <div class="muted" style="font-size:13px;">
+                    Menampilkan {{ $houses->firstItem() }} - {{ $houses->lastItem() }} dari {{ $houses->total() }}
+                </div>
+                <div>
+                    {{ $houses->links() }}
                 </div>
             </div>
-
-        </div>
+        @endif
     </div>
 </x-app-layout>

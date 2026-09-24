@@ -1,145 +1,94 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Tambah Wilayah
-        </h2>
+        <div>
+            <div class="kicker">
+                <i class="fa-solid fa-map-pin"></i> DATA MASTER
+            </div>
+            <h1>Tambah Wilayah Baru</h1>
+            <p class="muted">
+                Daftarkan kecamatan atau desa/kelurahan baru ke dalam sistem.
+            </p>
+        </div>
+
+        <div class="actions">
+            <a href="{{ route('regions.index') }}" class="btn">
+                <i class="fa-solid fa-arrow-left"></i> Kembali
+            </a>
+        </div>
     </x-slot>
 
-    <div class="py-6">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+    <div style="max-width: 680px; margin: 0 auto;">
+        <div class="card">
+            <form method="POST" action="{{ route('regions.store') }}">
+                @csrf
 
-            <div class="bg-white shadow-sm sm:rounded-lg">
-                <div class="p-6">
-
-                    <form method="POST" action="{{ route('regions.store') }}">
-                        @csrf
-
-                        <div class="space-y-5">
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">
-                                    Wilayah Induk
-                                </label>
-
-                                <select name="parent_id"
-                                        class="mt-1 block w-full rounded-md border-gray-300">
-                                    <option value="">-- Tidak Ada --</option>
-
-                                    @foreach($parents as $parent)
-                                        <option value="{{ $parent->id }}"
-                                            @selected(old('parent_id') == $parent->id)>
-                                            {{ $parent->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-
-                                @error('parent_id')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">
-                                    Kode Wilayah
-                                </label>
-
-                                <input type="text"
-                                       name="code"
-                                       value="{{ old('code') }}"
-                                       class="mt-1 block w-full rounded-md border-gray-300"
-                                       placeholder="Contoh: 32.09.01">
-
-                                @error('code')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">
-                                    Nama Wilayah
-                                </label>
-
-                                <input type="text"
-                                       name="name"
-                                       value="{{ old('name') }}"
-                                       class="mt-1 block w-full rounded-md border-gray-300"
-                                       placeholder="Contoh: Kecamatan Sumber">
-
-                                @error('name')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">
-                                    Tipe
-                                </label>
-
-                                <select name="type"
-                                        class="mt-1 block w-full rounded-md border-gray-300">
-                                    <option value="Kabupaten" @selected(old('type') === 'Kabupaten')>
-                                        Kabupaten
-                                    </option>
-                                    <option value="Kecamatan" @selected(old('type') === 'kecamatan')>
-                                        Kecamatan
-                                    </option>
-                                    <option value="desa" @selected(old('type') === 'desa')>
-                                        Desa/Kelurahan
-                                    </option>
-                                </select>
-
-                                @error('type')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">
-                                    Level
-                                </label>
-
-                                <input type="number"
-                                       name="level"
-                                       value="{{ old('level', 0) }}"
-                                       min="0"
-                                       class="mt-1 block w-full rounded-md border-gray-300">
-
-                                @error('level')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div class="flex items-center">
-                                <input type="checkbox"
-                                       name="is_active"
-                                       value="1"
-                                       checked
-                                       class="rounded border-gray-300">
-
-                                <label class="ml-2 text-sm text-gray-700">
-                                    Wilayah aktif
-                                </label>
-                            </div>
-
-                        </div>
-
-                        <div class="mt-6 flex items-center gap-3">
-                            <button type="submit"
-                                    class="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700">
-                                Simpan
-                            </button>
-
-                            <a href="{{ route('regions.index') }}"
-                               class="px-4 py-2 text-gray-700 hover:text-gray-900">
-                                Batal
-                            </a>
-                        </div>
-
-                    </form>
-
+                <div class="form-group">
+                    <label for="parent_id">Wilayah Induk (Kecamatan)</label>
+                    <select id="parent_id" name="parent_id">
+                        <option value="">-- Tidak Ada (Tingkat Kecamatan) --</option>
+                        @foreach($parents as $parent)
+                            <option value="{{ $parent->id }}" @selected(old('parent_id') == $parent->id)>
+                                {{ $parent->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('parent_id')
+                        <p style="color:#b91c1c; font-size:12px; margin-top:4px;">{{ $message }}</p>
+                    @enderror
                 </div>
-            </div>
 
+                <div class="form-group">
+                    <label for="code">Kode Wilayah Kemendagri / BPS</label>
+                    <input type="text" id="code" name="code" value="{{ old('code') }}" placeholder="Contoh: 32.09.01">
+                    @error('code')
+                        <p style="color:#b91c1c; font-size:12px; margin-top:4px;">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="name">Nama Wilayah</label>
+                    <input type="text" id="name" name="name" value="{{ old('name') }}" placeholder="Contoh: Kecamatan Sumber">
+                    @error('name')
+                        <p style="color:#b91c1c; font-size:12px; margin-top:4px;">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="grid2">
+                    <div class="form-group">
+                        <label for="type">Tipe Wilayah</label>
+                        <select id="type" name="type">
+                            <option value="Kecamatan" @selected(old('type') === 'Kecamatan')>Kecamatan</option>
+                            <option value="desa" @selected(old('type') === 'desa')>Desa / Kelurahan</option>
+                            <option value="Kabupaten" @selected(old('type') === 'Kabupaten')>Kabupaten</option>
+                        </select>
+                        @error('type')
+                            <p style="color:#b91c1c; font-size:12px; margin-top:4px;">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label for="level">Level Hirarki</label>
+                        <input type="number" id="level" name="level" value="{{ old('level', 1) }}" min="0">
+                        @error('level')
+                            <p style="color:#b91c1c; font-size:12px; margin-top:4px;">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:8px; margin-top:10px; margin-bottom:24px;">
+                    <input type="checkbox" id="is_active" name="is_active" value="1" checked style="width:auto; margin:0;">
+                    <label for="is_active" style="margin:0; cursor:pointer;">Wilayah aktif</label>
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="btn primary">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan Wilayah
+                    </button>
+                    <a href="{{ route('regions.index') }}" class="btn">
+                        <i class="fa-solid fa-xmark"></i> Batal
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </x-app-layout>

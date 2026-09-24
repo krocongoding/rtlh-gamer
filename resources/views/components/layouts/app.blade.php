@@ -1,29 +1,37 @@
-@props(['title' => 'Portal RTLH Cirebon'])
+@props([
+    'title' => 'Portal RTLH Kabupaten Cirebon',
+])
 
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+<html lang="id">
 
-    <title>{{ config('app.name', 'Portal RTLH Cirebon') }}</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Portal Data dan Sistem Informasi Geografis Rumah Tidak Layak Huni (RTLH) Kabupaten Cirebon">
+    <meta name="theme-color" content="#0f172a">
+
+    <title>{{ $title }} | Portal RTLH Kabupaten Cirebon</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Font Awesome -->
+    <!-- Font Awesome / Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-    <!-- App CSS -->
+    <!-- App Stylesheet -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+
+    @stack('head')
 
     {{-- Anti-FOUC: apply dark class before first paint --}}
     <script>if(localStorage.getItem('rtlh-dark-mode')==='1'){document.documentElement.classList.add('dark');}</script>
 </head>
+
 <body>
+
     {{-- BACKDROP OVERLAY FOR DRAWER --}}
     <div id="drawer-overlay" class="drawer-overlay" onclick="closeNavDrawer()"></div>
 
@@ -130,9 +138,10 @@
         @endauth
     </aside>
 
-    {{-- Top Navigation Bar --}}
+    {{-- TOP NAVIGATION BAR --}}
     <header class="topbar">
         <div class="container nav" style="display:flex; align-items:center; justify-content:space-between;">
+
             {{-- LEFT: DRAWER MENU TOGGLE + BRAND --}}
             <div style="display:flex; align-items:center; gap:14px;">
                 <button type="button" class="nav-drawer-btn" onclick="toggleNavDrawer()" title="Buka Menu Navigasi">
@@ -145,8 +154,12 @@
                         <i class="fa-solid fa-house-chimney-crack"></i>
                     </div>
                     <div class="brand-info">
-                        <span class="brand-title">RTLH Cirebon</span>
-                        <span class="brand-subtitle">Sistem Informasi Geografis</span>
+                        <span class="brand-title">
+                            RTLH Cirebon
+                        </span>
+                        <span class="brand-subtitle">
+                            Sistem Informasi Geografis
+                        </span>
                     </div>
                 </a>
             </div>
@@ -193,43 +206,94 @@
                     <i class="fa-solid fa-moon" id="darkToggleIcon"></i>
                 </button>
             </div>
+
         </div>
     </header>
 
-    {{-- Main Container --}}
-    <main class="container fade-in" style="flex:1; padding-top:20px; padding-bottom:48px;">
-        @isset($header)
-            <div class="pagehead" style="padding-top:10px; padding-bottom:18px;">
-                {{ $header }}
-            </div>
-        @endisset
-
+    {{-- MAIN CONTENT WRAPPER --}}
+    <main class="container fade-in" style="flex:1; padding-top:12px; padding-bottom:48px;">
         {{-- FLASH MESSAGES --}}
         @if(session('ok') || session('success'))
-            <div class="alert ok">
+            <div class="alert ok" style="margin-top:16px;">
                 <i class="fa-solid fa-circle-check fa-lg"></i>
                 <div>{{ session('ok') ?? session('success') }}</div>
             </div>
         @endif
 
         @if(session('error') || session('err'))
-            <div class="alert err">
+            <div class="alert err" style="margin-top:16px;">
                 <i class="fa-solid fa-triangle-exclamation fa-lg"></i>
                 <div>{{ session('error') ?? session('err') }}</div>
+            </div>
+        @endif
+
+        @if(session('status'))
+            <div class="alert info" style="margin-top:16px;">
+                <i class="fa-solid fa-circle-info fa-lg"></i>
+                <div>{{ session('status') }}</div>
             </div>
         @endif
 
         {{ $slot }}
     </main>
 
-    {{-- Footer --}}
+    {{-- FOOTER --}}
     <footer class="footer">
-        <div class="container" style="text-align:center;">
-            <div>&copy; {{ date('Y') }} Pemerintah Kabupaten Cirebon • Dinas Perumahan, Kawasan Permukiman dan Pertanahan</div>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                        <div class="brand-logo" style="width:36px;height:36px;font-size:16px;">
+                            <i class="fa-solid fa-house-chimney-crack"></i>
+                        </div>
+                        <h4 style="margin:0;">Portal RTLH Cirebon</h4>
+                    </div>
+                    <p>Sistem Informasi Geografis dan Basis Data Terpadu Penanganan Rumah Tidak Layak Huni (RTLH) Kabupaten Cirebon.</p>
+                </div>
+
+                <div class="footer-col">
+                    <h5>Navigasi Publik</h5>
+                    <ul>
+                        <li><a href="{{ route('public.home') }}">Beranda</a></li>
+                        <li><a href="{{ route('public.map') }}">Peta GIS Tematik</a></li>
+                        <li><a href="{{ route('public.statistics') }}">Statistik & Tren</a></li>
+                        <li><a href="{{ route('public.datasets') }}">Katalog Open Data</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h5>Layanan & Integrasi</h5>
+                    <ul>
+                        <li><a href="{{ route('api.public.rtlh') }}" target="_blank">RTLH GeoJSON API</a></li>
+                        <li><a href="{{ route('api.public.statistics') }}" target="_blank">Statistik JSON API</a></li>
+                        <li><a href="{{ route('public.download.rtlh') }}">Download CSV RTLH</a></li>
+                        <li><a href="{{ route('public.viewer') }}">Panduan Pengguna</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h5>Akses Petugas</h5>
+                    <ul>
+                        @auth
+                            <li><a href="{{ route('dashboard') }}">Dashboard Saya</a></li>
+                            <li><a href="{{ route('profile.edit') }}">Pengaturan Akun</a></li>
+                        @else
+                            <li><a href="{{ route('login') }}">Login Petugas Lapangan</a></li>
+                            <li><a href="{{ route('register') }}">Registrasi Surveyor</a></li>
+                        @endauth
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <div>&copy; {{ date('Y') }} Pemerintah Kabupaten Cirebon. Dinas Perumahan, Kawasan Permukiman dan Pertanahan.</div>
+                <div>WebGIS & Data Platform v2.0</div>
+            </div>
         </div>
     </footer>
 
     <script>
+        // ── Dark Mode ─────────────────────────────────────────
         const DARK_KEY = 'rtlh-dark-mode';
         const html     = document.documentElement;
         const icon     = document.getElementById('darkToggleIcon');
@@ -249,6 +313,7 @@
             applyDarkMode(!html.classList.contains('dark'));
         }
 
+        // Apply saved preference immediately (prevents flash)
         applyDarkMode(localStorage.getItem(DARK_KEY) === '1');
 
         // ── Drawer Menu (Non-blocking Offcanvas) ────────────
@@ -266,5 +331,8 @@
             }
         }
     </script>
+
+    @stack('scripts')
 </body>
+
 </html>

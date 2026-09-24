@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class HouseCeiling extends Model
 {
@@ -11,8 +12,18 @@ class HouseCeiling extends Model
         'condition_id',
     ];
 
-    public function house()
+    public function house(): BelongsTo
     {
-        return $this->belongsTo(House::class);
+        return $this->belongsTo(
+            House::class
+        );
+    }
+
+    public function condition(): BelongsTo
+    {
+        return $this->belongsTo(
+            MasterValue::class,
+            'condition_id'
+        );
     }
 }

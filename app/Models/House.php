@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class House extends Model
 {
@@ -22,6 +23,8 @@ class House extends Model
         'created_by',
         'updated_by',
         'location',
+        'latitude',
+        'longitude',
         'settlement_condition_id',
         'room_function_id',
         'ownership_status_id',
@@ -44,6 +47,16 @@ class House extends Model
     public function region()
     {
         return $this->belongsTo(Region::class);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     public function assessments()
@@ -72,6 +85,11 @@ class House extends Model
         return $this->hasOne(HouseWall::class);
     }
 
+    public function ceiling()
+    {
+        return $this->hasOne(HouseCeiling::class);
+    }
+
     public function roof()
     {
         return $this->hasOne(HouseRoof::class);
@@ -97,17 +115,96 @@ class House extends Model
         return $this->hasMany(HousePhoto::class);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Master Data Rumah
+    |--------------------------------------------------------------------------
+    */
+
+    public function settlementCondition(): BelongsTo
+    {
+        return $this->belongsTo(
+            MasterValue::class,
+            'settlement_condition_id'
+        );
+    }
+
+    public function roomFunction(): BelongsTo
+    {
+        return $this->belongsTo(
+            MasterValue::class,
+            'room_function_id'
+        );
+    }
+
+    public function ownershipStatus(): BelongsTo
+    {
+        return $this->belongsTo(
+            MasterValue::class,
+            'ownership_status_id'
+        );
+    }
+
+    public function landStatus(): BelongsTo
+    {
+        return $this->belongsTo(
+            MasterValue::class,
+            'land_status_id'
+        );
+    }
+
     public function getLatitudeAttribute()
     {
-        return $this->location
-            ? ($this->location->coordinates[1] ?? null)
-            : null;
+        if (array_key_exists('latitude', $this->attributes) && $this->attributes['latitude'] !== null && $this->attributes['latitude'] !== '') {
+            return (float) $this->attributes['latitude'];
+        }
+        return $this->extractCoordinateFromLocation('lat');
     }
 
     public function getLongitudeAttribute()
     {
-        return $this->location
-            ? ($this->location->coordinates[0] ?? null)
-            : null;
+        if (array_key_exists('longitude', $this->attributes) && $this->attributes['longitude'] !== null && $this->attributes['longitude'] !== '') {
+            return (float) $this->attributes['longitude'];
+        }
+        return $this->extractCoordinateFromLocation('lng');
+    }
+
+    protected function extractCoordinateFromLocation(string $type)
+    {
+        $location = $this->attributes['location'] ?? null;
+        if (!$location) {
+            return null;
+        }
+
+        if (is_object($location)) {
+            if (isset($location->coordinates) && is_array($location->coordinates)) {
+                return $type === 'lat' ? ($location->coordinates[1] ?? null) : ($location->coordinates[0] ?? null);
+            }
+        }
+
+        if (is_string($location) && strlen($location) >= 42) {
+            try {
+                $bin = @hex2bin($location);
+                if ($bin && strlen($bin) >= 21) {
+                    $unpack = @unpack('Corder/Vtype', $bin);
+                    $byteorder = $unpack['order'] ?? 1;
+
+                    if (strlen($bin) >= 25) {
+                        $parsed = @unpack($byteorder === 1 ? 'Corder/Vtype/Vsrid/dlng/dlat' : 'Corder/Ntype/Nsrid/dlng/dlat', $bin);
+                        if (isset($parsed['lat']) && isset($parsed['lng'])) {
+                            return $type === 'lat' ? round($parsed['lat'], 7) : round($parsed['lng'], 7);
+                        }
+                    }
+
+                    $parsed = @unpack($byteorder === 1 ? 'Corder/Vtype/dlng/dlat' : 'Corder/Ntype/dlng/dlat', $bin);
+                    if (isset($parsed['lat']) && isset($parsed['lng'])) {
+                        return $type === 'lat' ? round($parsed['lat'], 7) : round($parsed['lng'], 7);
+                    }
+                }
+            } catch (\Throwable $e) {
+            }
+        }
+
+        return null;
     }
 }

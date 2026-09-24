@@ -1,247 +1,175 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
             <div>
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                <h1 style="font-size:1.5rem; font-weight:800; color:var(--text-main); margin:0;">
                     Data Penghuni Rumah
-                </h2>
-
-                <p class="text-sm text-gray-500 mt-1">
-                    {{ $house->house_code }}
+                </h1>
+                <p style="color:var(--text-muted); font-size:0.875rem; margin:4px 0 0 0;">
+                    Kode Rumah: <span class="badge badge-info font-mono">{{ $house->house_code }}</span> | Penerima: <strong>{{ $house->applicant_name }}</strong>
                 </p>
             </div>
-
-            <a href="{{ route('houses.show', $house) }}"
-               class="px-4 py-2 text-sm text-gray-700 hover:text-gray-900">
-                Kembali
+            <a href="{{ route('houses.show', $house) }}" class="btn">
+                <i class="fa-solid fa-arrow-left"></i> Kembali ke Detail
             </a>
         </div>
     </x-slot>
 
-    <div class="py-6">
-        <div class="max-w-6xl mx-auto sm:px-6 lg:px-8">
-
-            {{-- ERROR --}}
-            @if ($errors->any())
-                <div class="mb-6 rounded-lg border border-red-300 bg-red-50 px-5 py-4">
-
-                    <h3 class="font-semibold text-red-800 mb-2">
-                        Terjadi kesalahan:
-                    </h3>
-
-                    <ul class="list-disc list-inside text-sm text-red-700 space-y-1">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-
+    <div style="max-width:1000px; margin:0 auto;">
+        {{-- ERRORS --}}
+        @if ($errors->any())
+            <div style="padding:16px 20px; background:#fef2f2; border:1px solid #fecaca; border-radius:var(--radius-md); margin-bottom:24px;">
+                <div style="font-weight:700; color:#991b1b; display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Terjadi kesalahan input:
                 </div>
-            @endif
+                <ul style="margin:0; padding-left:20px; color:#b91c1c; font-size:0.875rem;">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-            <form method="POST"
-                  action="{{ route('houses.occupants.update', $house) }}"
-                  x-data="occupantForm()">
+        <form method="POST"
+              action="{{ route('houses.occupants.update', $house) }}"
+              x-data="occupantForm()">
+            @csrf
+            @method('PUT')
 
-                @csrf
-                @method('PUT')
-
-                <div class="bg-white shadow-sm sm:rounded-lg p-6">
-
-                    {{-- HEADER --}}
-                    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
-
-                        <div>
-                            <h3 class="text-xl font-bold text-gray-900">
-                                Daftar Penghuni
-                            </h3>
-
-                            <p class="text-sm text-gray-500 mt-1">
-                                Tambahkan seluruh anggota penghuni rumah.
-                            </p>
+            <div class="card" style="margin-bottom:24px;">
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                    <div>
+                        <div class="card-title">
+                            <i class="fa-solid fa-users" style="color:var(--primary);"></i> Daftar Anggota Penghuni
                         </div>
-
-                        <button type="button"
-                                @click="add()"
-                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                            + Tambah Penghuni
-                        </button>
-
+                        <div class="card-desc">Tambahkan dan lengkapi data seluruh anggota keluarga yang menghuni rumah ini.</div>
                     </div>
+                    <button type="button" @click="add()" class="btn btn-primary btn-sm">
+                        <i class="fa-solid fa-user-plus"></i> Tambah Penghuni
+                    </button>
+                </div>
 
+                <div class="card-body">
                     {{-- EMPTY STATE --}}
                     <template x-if="occupants.length === 0">
-                        <div class="border border-dashed border-gray-300 rounded-lg p-8 text-center">
-
-                            <p class="text-gray-500">
-                                Belum ada data penghuni.
-                            </p>
-
-                            <button type="button"
-                                    @click="add()"
-                                    class="mt-3 text-blue-600 hover:text-blue-800 font-medium">
-                                + Tambahkan penghuni pertama
+                        <div style="border:2px dashed var(--border-color); border-radius:var(--radius-md); padding:40px 20px; text-align:center; background:#fafafa;">
+                            <div style="width:56px; height:56px; border-radius:50%; background:var(--bg-card); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; color:var(--text-muted); font-size:1.5rem; border:1px solid var(--border-color);">
+                                <i class="fa-solid fa-user-group"></i>
+                            </div>
+                            <h4 style="font-size:1rem; font-weight:700; color:var(--text-main); margin-bottom:4px;">Belum Ada Data Penghuni</h4>
+                            <p style="color:var(--text-muted); font-size:0.875rem; margin-bottom:16px;">Tambahkan data anggota keluarga penghuni rumah untuk melengkapi berkas.</p>
+                            <button type="button" @click="add()" class="btn btn-primary">
+                                <i class="fa-solid fa-plus"></i> Tambahkan Penghuni Pertama
                             </button>
-
                         </div>
                     </template>
 
-                    {{-- OCCUPANTS --}}
-                    <div class="space-y-6">
-
-                        <template x-for="(occupant, index) in occupants"
-                                  :key="occupant.key"> 
-                                  <input
-                                    type="hidden"
-                                    :name="`occupants[${index}][id]`"
-                                    x-model="occupant.id">
-
-                            <div class="border rounded-lg p-5">
+                    {{-- OCCUPANTS LIST --}}
+                    <div style="display:flex; flex-direction:column; gap:16px;">
+                        <template x-for="(occupant, index) in occupants" :key="occupant.key">
+                            <div style="border:1px solid var(--border-color); border-radius:var(--radius-md); padding:20px; background:var(--bg-main); transition:all 0.2s ease;">
+                                <input type="hidden" :name="`occupants[${index}][id]`" x-model="occupant.id">
 
                                 {{-- CARD HEADER --}}
-                                <div class="flex items-center justify-between mb-5">
-
-                                    <h4 class="font-semibold text-gray-800">
-                                        Penghuni #<span x-text="index + 1"></span>
-                                    </h4>
-
-                                    <button type="button"
-                                            @click="remove(index)"
-                                            class="text-sm text-red-600 hover:text-red-800">
-                                        Hapus
+                                <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:12px; margin-bottom:16px; border-bottom:1px solid var(--border-color);">
+                                    <div style="display:flex; align-items:center; gap:8px;">
+                                        <span class="badge badge-info" style="font-size:0.8rem; font-weight:700;">
+                                            #<span x-text="index + 1"></span>
+                                        </span>
+                                        <span style="font-weight:700; color:var(--text-main); font-size:0.95rem;">
+                                            <span x-text="occupant.relationship ? occupant.relationship : 'Anggota Keluarga Baru'"></span>
+                                        </span>
+                                    </div>
+                                    <button type="button" @click="remove(index)" class="btn btn-danger btn-sm" title="Hapus anggota ini">
+                                        <i class="fa-solid fa-trash"></i> Hapus
                                     </button>
-
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-
+                                <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px;">
                                     {{-- HUBUNGAN --}}
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                                            Hubungan dengan Kepala Keluarga
-                                        </label>
-
+                                    <div class="form-group">
+                                        <label class="form-label required">Hubungan Keluarga</label>
                                         <input type="text"
                                                :name="`occupants[${index}][relationship]`"
                                                x-model="occupant.relationship"
-                                               placeholder="Contoh: Kepala Keluarga"
+                                               placeholder="Contoh: Kepala Keluarga, Istri, Anak"
                                                required
-                                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                               class="form-input">
                                     </div>
 
                                     {{-- JENIS KELAMIN --}}
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                                            Jenis Kelamin
-                                        </label>
-
+                                    <div class="form-group">
+                                        <label class="form-label required">Jenis Kelamin</label>
                                         <select :name="`occupants[${index}][gender]`"
                                                 x-model="occupant.gender"
                                                 required
-                                                class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-
-                                            <option value="">
-                                                -- Pilih Jenis Kelamin --
-                                            </option>
-
-                                            <option value="L">
-                                                Laki-laki
-                                            </option>
-
-                                            <option value="P">
-                                                Perempuan
-                                            </option>
-
+                                                class="form-select">
+                                            <option value="">-- Pilih Jenis Kelamin --</option>
+                                            <option value="L">Laki-laki</option>
+                                            <option value="P">Perempuan</option>
                                         </select>
                                     </div>
 
                                     {{-- TAHUN LAHIR --}}
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                                            Tahun Lahir
-                                        </label>
-
+                                    <div class="form-group">
+                                        <label class="form-label">Tahun Lahir</label>
                                         <input type="number"
                                                :name="`occupants[${index}][birth_year]`"
                                                x-model="occupant.birth_year"
                                                min="1900"
                                                max="2100"
                                                placeholder="Contoh: 1985"
-                                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                               class="form-input">
                                     </div>
 
                                     {{-- PEKERJAAN --}}
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                                            Pekerjaan
-                                        </label>
-
+                                    <div class="form-group">
+                                        <label class="form-label">Pekerjaan</label>
                                         <input type="text"
                                                :name="`occupants[${index}][occupation]`"
                                                x-model="occupant.occupation"
-                                               placeholder="Contoh: Petani"
-                                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                               placeholder="Contoh: Buruh Harian / Petani"
+                                               class="form-input">
                                     </div>
 
                                     {{-- PENDIDIKAN --}}
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                                            Pendidikan
-                                        </label>
-
+                                    <div class="form-group">
+                                        <label class="form-label">Pendidikan Terakhir</label>
                                         <input type="text"
                                                :name="`occupants[${index}][education]`"
                                                x-model="occupant.education"
-                                               placeholder="Contoh: SMA"
-                                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                               placeholder="Contoh: SD / SMP / SMA"
+                                               class="form-input">
                                     </div>
 
                                     {{-- KONTAK UTAMA --}}
-                                    <div class="flex items-center">
-
-                                        <label class="flex items-center gap-3 cursor-pointer">
-
+                                    <div class="form-group" style="display:flex; align-items:flex-end; padding-bottom:8px;">
+                                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin:0; font-size:0.875rem; font-weight:600; color:var(--text-main);">
                                             <input type="checkbox"
                                                    :name="`occupants[${index}][is_primary_contact]`"
                                                    value="1"
                                                    x-model="occupant.is_primary_contact"
-                                                   class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
-
-                                            <span class="text-sm font-medium text-gray-700">
-                                                Kontak Utama
-                                            </span>
-
+                                                   style="width:18px; height:18px; accent-color:var(--primary); cursor:pointer;">
+                                            <span>Jadikan Kontak Utama</span>
                                         </label>
-
                                     </div>
-
                                 </div>
-
                             </div>
-
                         </template>
-
                     </div>
-
-                    {{-- FOOTER --}}
-                    <div class="flex items-center justify-end gap-3 mt-6 pt-6 border-t">
-
-                        <a href="{{ route('houses.show', $house) }}"
-                           class="px-5 py-2.5 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
-                            Batal
-                        </a>
-
-                        <button type="submit"
-                                class="px-5 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                            Simpan Penghuni
-                        </button>
-
-                    </div>
-
                 </div>
 
-            </form>
-
-        </div>
+                {{-- FOOTER --}}
+                <div class="card-footer" style="display:flex; justify-content:flex-end; gap:12px; background:var(--bg-main);">
+                    <a href="{{ route('houses.show', $house) }}" class="btn">
+                        <i class="fa-solid fa-xmark"></i> Batal
+                    </a>
+                    <button type="submit" class="btn primary">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan Penghuni
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 
     <script>
@@ -281,5 +209,4 @@
             }
         }
     </script>
-
 </x-app-layout>
