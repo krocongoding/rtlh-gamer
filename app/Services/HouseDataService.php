@@ -3,11 +3,40 @@
 namespace App\Services;
 
 use App\Models\House;
+use App\Models\Region;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class HouseDataService
 {
+    /**
+     * Generate kode yang mudah ditelusuri per desa/kelurahan, misalnya
+     * RTLH-KALIBUNTU-0001. Indeks unik pada kolom house_code tetap menjadi
+     * pengaman terakhir agar tidak ada kode yang sama.
+     */
+    public function generateUniqueCode(int $regionId): string
+    {
+        $region = Region::findOrFail($regionId);
+        $regionSlug = Str::upper(Str::slug($region->name, '-'));
+        $prefix = 'RTLH-' . Str::substr($regionSlug ?: $region->code, 0, 40);
+
+        $lastCode = House::query()
+            ->where('house_code', 'like', $prefix . '-%')
+            ->orderByDesc('id')
+            ->value('house_code');
+
+        $sequence = $lastCode && preg_match('/-(\d+)$/', $lastCode, $matches)
+            ? ((int) $matches[1]) + 1
+            : 1;
+
+        do {
+            $code = sprintf('%s-%04d', $prefix, $sequence++);
+        } while (House::where('house_code', $code)->exists());
+
+        return $code;
+    }
+
     public function save(House $house, array $data, int $userId, bool $submit = false): House
     {
         return DB::transaction(function () use ($house, $data, $userId, $submit) {
@@ -56,6 +85,9 @@ class HouseDataService
             $data['latitude'] = $lat;
             $data['longitude'] = $lng;
             $data['updated_by'] = $userId;
+            // Kode rumah ditetapkan server saat data pertama dibuat dan tidak
+            // berubah ketika wilayah atau detail lain diperbarui.
+            unset($data['house_code']);
 
             if ($submit) {
                 $data['status'] = 'submitted';

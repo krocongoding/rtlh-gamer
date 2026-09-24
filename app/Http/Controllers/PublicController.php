@@ -279,7 +279,7 @@ class PublicController extends Controller
         );
 
         $house->load([
-            'region',
+            'region.parent',
             'structure.sloofCondition',
             'structure.columnCondition',
             'structure.beamCondition',
@@ -300,6 +300,7 @@ class PublicController extends Controller
             'ownershipStatus',
             'landStatus',
             'latestAssessment.items',
+            'photos',
         ]);
 
         return view(

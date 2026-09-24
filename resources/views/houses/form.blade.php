@@ -177,15 +177,16 @@
 
             <div class="grid3">
                 <div class="form-field">
-                    <label for="house_code">Kode RTLH <span class="req">*</span></label>
+                    <label for="house_code">Kode RTLH (dibuat otomatis)</label>
                     <input
                         type="text"
                         id="house_code"
                         name="house_code"
                         value="{{ old('house_code', $house->house_code) }}"
-                        placeholder="Contoh: RTLH-2026-001"
-                        required
+                        placeholder="Pilih wilayah untuk melihat format kode"
+                        readonly
                     >
+                    <small class="muted" id="house-code-help">Kode dibuat oleh sistem berdasarkan desa/kelurahan dan nomor urut, sehingga tidak dapat sama.</small>
                 </div>
 
                 <div class="form-field">
@@ -206,7 +207,7 @@
                     <select id="region_id" name="region_id" required>
                         <option value="">-- Pilih Wilayah --</option>
                         @foreach($regions as $r)
-                            <option value="{{ $r->id }}" @selected(old('region_id', $house->region_id) == $r->id)>
+                            <option value="{{ $r->id }}" data-region-name="{{ $r->name }}" @selected(old('region_id', $house->region_id) == $r->id)>
                                 {{ $r->name }} ({{ ucfirst($r->type ?? 'Desa') }})
                             </option>
                         @endforeach
@@ -297,12 +298,38 @@
                 >{{ old('address', $house->address) }}</textarea>
             </div>
 
+            <div style="background:var(--slate-50); border:1px solid var(--slate-200); border-radius:var(--radius-lg); padding:20px; margin-top:8px;">
+                <div style="margin-bottom:14px;">
+                    <strong style="font-size:14px; color:var(--slate-800);"><i class="fa-solid fa-id-card" style="color:#0284c7;"></i> Informasi Administratif & Kepemilikan</strong>
+                    <div class="muted" style="font-size:12px;">Isi sesuai kondisi saat survei. Data ini akan tampil sebagai ringkasan pada halaman viewer.</div>
+                </div>
+                <div class="grid2">
+                    @foreach([
+                        ['settlement_condition_id', 'Kondisi Kawasan Permukiman', 'Pilih apakah lingkungan tempat rumah berada kumuh atau tidak kumuh.', 'SETTLEMENT_CONDITION'],
+                        ['room_function_id', 'Fungsi Bangunan / Ruang Utama', 'Pilih fungsi utama bangunan yang ditempati.', 'ROOM_FUNCTION'],
+                        ['ownership_status_id', 'Status Penguasaan Rumah', 'Contoh: milik sendiri, sewa/kontrak, atau lainnya.', 'OWNERSHIP_STATUS'],
+                        ['land_status_id', 'Status Penguasaan Tanah', 'Contoh: milik sendiri atau status lainnya.', 'LAND_STATUS'],
+                    ] as [$field, $label, $help, $category])
+                        <div class="form-field" style="margin-bottom:0;">
+                            <label for="{{ $field }}">{{ $label }}</label>
+                            <select id="{{ $field }}" name="{{ $field }}">
+                                <option value="">-- Belum diisi --</option>
+                                @foreach(($cats[$category]->values ?? []) as $value)
+                                    <option value="{{ $value->id }}" @selected(old($field, $house->{$field}) == $value->id)>{{ $value->label }}</option>
+                                @endforeach
+                            </select>
+                            <small class="muted" style="margin-top:5px;">{{ $help }}</small>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
             {{-- TITIK KOORDINAT GPS --}}
             <div style="background:var(--slate-50); border:1px solid var(--slate-200); border-radius:var(--radius-lg); padding:20px; margin-top:8px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
                     <div>
                         <strong style="font-size:14px; color:var(--slate-800);"><i class="fa-solid fa-location-dot text-emerald-600" style="color:#059669;"></i> Koordinat GPS Lapangan (WGS84)</strong>
-                        <div class="muted" style="font-size:12px;">Gunakan tombol otomatis atau masukkan nilai derajat desimal secara manual.</div>
+                        <div class="muted" id="gps-status" style="font-size:12px;">Lokasi GPS akan diambil otomatis saat formulir dibuka. Pin peta tetap dapat digeser bila perlu.</div>
                     </div>
                     <button type="button" class="btn small" onclick="getCurrentLocation()" style="background:#fff;">
                         <i class="fa-solid fa-crosshairs text-emerald-600" style="color:#059669;"></i> Dapatkan GPS Saya Otomatis
@@ -733,6 +760,8 @@
             document.addEventListener('DOMContentLoaded', function () {
                 const latInput = document.getElementById('latitude');
                 const lngInput = document.getElementById('longitude');
+                const regionInput = document.getElementById('region_id');
+                const houseCodeInput = document.getElementById('house_code');
 
                 let initLat = parseFloat(latInput.value) || -6.7320000;
                 let initLng = parseFloat(lngInput.value) || 108.5520000;
@@ -761,7 +790,26 @@
                     latInput.value = coord.lat.toFixed(7);
                     lngInput.value = coord.lng.toFixed(7);
                 });
+
+                regionInput.addEventListener('change', updateCodePreview);
+                updateCodePreview();
+
+                if (!latInput.value || !lngInput.value) {
+                    getCurrentLocation(true);
+                }
             });
+
+            function updateCodePreview() {
+                const regionInput = document.getElementById('region_id');
+                const houseCodeInput = document.getElementById('house_code');
+                if ((!houseCodeInput.value && !regionInput.value) || (houseCodeInput.value && !houseCodeInput.value.endsWith('-XXXX'))) return;
+
+                const regionName = regionInput.options[regionInput.selectedIndex]?.dataset.regionName || '';
+                const prefix = regionName
+                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                    .toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-|-$/g, '');
+                houseCodeInput.value = prefix ? `RTLH-${prefix}-XXXX` : '';
+            }
 
             function updateMapFromInputs() {
                 const lat = parseFloat(document.getElementById('latitude').value);
@@ -774,7 +822,7 @@
                 }
             }
 
-            function getCurrentLocation() {
+            function getCurrentLocation(isAutomatic = false) {
                 if (!navigator.geolocation) {
                     alert('Browser Anda tidak mendukung deteksi geolokasi.');
                     return;
@@ -782,9 +830,11 @@
 
                 const latInput = document.getElementById('latitude');
                 const lngInput = document.getElementById('longitude');
+                const gpsStatus = document.getElementById('gps-status');
 
                 latInput.placeholder = 'Mengambil GPS...';
                 lngInput.placeholder = 'Mengambil GPS...';
+                gpsStatus.textContent = isAutomatic ? 'Mengambil lokasi GPS terkini...' : 'Memperbarui lokasi GPS terkini...';
 
                 navigator.geolocation.getCurrentPosition(
                     function(position) {
@@ -795,9 +845,12 @@
                         lngInput.value = lng;
 
                         updateMapFromInputs();
+                        const accuracy = Math.round(position.coords.accuracy);
+                        gpsStatus.textContent = `Lokasi GPS terkini berhasil digunakan (akurasi sekitar ${accuracy} m).`;
                     },
                     function(error) {
-                        alert('Gagal mengambil titik koordinat GPS: ' + error.message);
+                        gpsStatus.textContent = 'GPS belum tersedia. Izinkan akses lokasi atau tentukan titik pada peta.';
+                        if (!isAutomatic) alert('Gagal mengambil titik koordinat GPS: ' + error.message);
                     },
                     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                 );

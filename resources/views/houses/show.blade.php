@@ -332,12 +332,14 @@
             <div class="photos" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:16px;">
                 @foreach($house->photos as $photo)
                     <div style="border:1px solid var(--slate-200); border-radius:var(--radius-md); overflow:hidden; background:var(--slate-50);">
-                        <img
-                            src="{{ asset('storage/' . $photo->path) }}"
-                            alt="{{ $photo->caption ?? 'Foto Rumah' }}"
-                            style="width:100%; height:160px; object-fit:cover; display:block;"
-                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                        >
+                        <button type="button" onclick="openPhotoPreview(@js(asset('storage/' . $photo->path)), @js($photo->caption ?? ucfirst(str_replace(['photo_', '_'], ['', ' '], $photo->type ?? 'Foto'))))" style="display:block; width:100%; border:0; padding:0; background:none; cursor:zoom-in;" title="Klik untuk melihat foto lebih besar">
+                            <img
+                                src="{{ asset('storage/' . $photo->path) }}"
+                                alt="{{ $photo->caption ?? 'Foto Rumah' }}"
+                                style="width:100%; height:160px; object-fit:cover; display:block;"
+                                onerror="this.style.display='none'; this.parentElement.nextElementSibling.style.display='flex';"
+                            >
+                        </button>
                         <div style="display:none; height:160px; align-items:center; justify-content:center; background:var(--slate-100); color:var(--slate-400); font-size:13px;">
                             <i class="fa-solid fa-image-slash"></i> Foto tidak ditemukan
                         </div>
@@ -349,6 +351,14 @@
             </div>
         </div>
     @endif
+
+    <div id="photo-preview-modal" role="dialog" aria-modal="true" aria-label="Pratinjau foto dokumentasi" onclick="closePhotoPreview()" style="display:none; position:fixed; inset:0; z-index:2000; padding:24px; background:rgba(2, 6, 23, .88); align-items:center; justify-content:center;">
+        <div onclick="event.stopPropagation()" style="position:relative; max-width:min(1100px, 100%); max-height:100%;">
+            <button type="button" onclick="closePhotoPreview()" aria-label="Tutup pratinjau foto" style="position:absolute; top:12px; right:12px; z-index:1; width:38px; height:38px; border:0; border-radius:50%; background:rgba(15,23,42,.8); color:#fff; font-size:20px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+            <img id="photo-preview-image" src="" alt="" style="display:block; max-width:100%; max-height:82vh; border-radius:var(--radius-md); object-fit:contain;">
+            <p id="photo-preview-caption" style="margin:10px 0 0; text-align:center; color:#fff; font-size:14px;"></p>
+        </div>
+    </div>
 
     {{-- DATA PENGHUNI --}}
     @if($house->occupants && $house->occupants->isNotEmpty())
@@ -473,6 +483,22 @@
     @endif
 
     @push('scripts')
+        <script>
+            function openPhotoPreview(source, caption) {
+                document.getElementById('photo-preview-image').src = source;
+                document.getElementById('photo-preview-image').alt = caption;
+                document.getElementById('photo-preview-caption').textContent = caption;
+                document.getElementById('photo-preview-modal').style.display = 'flex';
+            }
+
+            function closePhotoPreview() {
+                document.getElementById('photo-preview-modal').style.display = 'none';
+            }
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') closePhotoPreview();
+            });
+        </script>
         @if($house->latitude !== null && $house->longitude !== null)
             <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
             <script>

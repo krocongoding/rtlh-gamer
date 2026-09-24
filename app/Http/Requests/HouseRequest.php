@@ -7,7 +7,7 @@ class HouseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'region_id'=>'required|exists:regions,id','house_code'=>'required|string|max:50',
+            'region_id'=>'required|exists:regions,id','house_code'=>'nullable|string|max:50',
             'address'=>'nullable|string|max:2000','block'=>'nullable|string|max:100','rt'=>'nullable|string|max:10','rw'=>'nullable|string|max:10',
             'area_m2'=>'nullable|numeric|min:0|max:10000','occupant_count'=>'nullable|integer|min:0|max:100','household_count'=>'nullable|integer|min:0|max:50',
             'survey_year'=>'required|integer|min:2000|max:2100','latitude'=>'nullable|numeric|between:-90,90','longitude'=>'nullable|numeric|between:-180,180',

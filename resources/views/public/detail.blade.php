@@ -96,6 +96,8 @@
                 </h3>
             </div>
 
+            <p class="muted" style="font-size:12px; margin:-6px 0 14px;">Ringkasan ini berasal dari isian surveyor saat pendataan lapangan.</p>
+
             <table style="font-size:13px;">
                 <tbody>
                     <tr>
@@ -103,8 +105,12 @@
                         <td><strong style="color:var(--slate-900);">{{ $house->house_code }}</strong></td>
                     </tr>
                     <tr>
-                        <td style="color:var(--slate-500); font-weight:600;">Wilayah / Kecamatan</td>
+                        <td style="color:var(--slate-500); font-weight:600;">Desa / Kelurahan</td>
                         <td>{{ $house->region?->name ?? '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td style="color:var(--slate-500); font-weight:600;">Kecamatan</td>
+                        <td>{{ $house->region?->parent?->name ?? ($house->region?->level === 1 ? $house->region?->name : '-') }}</td>
                     </tr>
                     <tr>
                         <td style="color:var(--slate-500); font-weight:600;">Alamat / Blok</td>
@@ -344,6 +350,44 @@
         </div>
     @endif
 
+    {{-- FOTO HASIL SURVEI --}}
+    <section class="card" style="margin-top:24px;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px; border-bottom:1px solid var(--slate-100); padding-bottom:12px;">
+            <div class="stat-widget-icon purple" style="width:36px; height:36px; font-size:16px; margin:0;">
+                <i class="fa-solid fa-images"></i>
+            </div>
+            <div>
+                <h3 style="font-size:16px; font-weight:800; color:var(--slate-900); margin:0;">Dokumentasi Hasil Survei</h3>
+                <p class="muted" style="font-size:12px; margin:2px 0 0;">Foto kondisi fisik rumah yang diunggah oleh surveyor.</p>
+            </div>
+        </div>
+
+        @if($house->photos->isNotEmpty())
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:16px;">
+                @foreach($house->photos as $photo)
+                    <figure style="margin:0; overflow:hidden; border:1px solid var(--slate-200); border-radius:var(--radius-md); background:var(--slate-50);">
+                        <button type="button" onclick="openPhotoPreview(@js(asset('storage/' . $photo->path)), @js($photo->caption ?: ucwords(str_replace('_', ' ', $photo->type))))" style="display:block; width:100%; border:0; padding:0; background:none; cursor:zoom-in;" title="Klik untuk melihat foto lebih besar">
+                            <img src="{{ asset('storage/' . $photo->path) }}" alt="{{ $photo->caption ?: 'Foto survei ' . str_replace('_', ' ', $photo->type) }}" style="display:block; width:100%; height:160px; object-fit:cover;" loading="lazy">
+                        </button>
+                        <figcaption style="padding:10px 12px; font-size:12px; font-weight:700; color:var(--slate-700);">{{ $photo->caption ?: ucwords(str_replace('_', ' ', $photo->type)) }}</figcaption>
+                    </figure>
+                @endforeach
+            </div>
+        @else
+            <div class="muted" style="padding:28px; text-align:center; background:var(--slate-50); border-radius:var(--radius-md);">
+                <i class="fa-solid fa-image" style="margin-right:6px;"></i> Belum ada foto survei yang dipublikasikan untuk unit ini.
+            </div>
+        @endif
+    </section>
+
+    <div id="photo-preview-modal" role="dialog" aria-modal="true" aria-label="Pratinjau foto dokumentasi" onclick="closePhotoPreview()" style="display:none; position:fixed; inset:0; z-index:2000; padding:24px; background:rgba(2, 6, 23, .88); align-items:center; justify-content:center;">
+        <div onclick="event.stopPropagation()" style="position:relative; max-width:min(1100px, 100%); max-height:100%;">
+            <button type="button" onclick="closePhotoPreview()" aria-label="Tutup pratinjau foto" style="position:absolute; top:12px; right:12px; z-index:1; width:38px; height:38px; border:0; border-radius:50%; background:rgba(15,23,42,.8); color:#fff; font-size:20px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+            <img id="photo-preview-image" src="" alt="" style="display:block; max-width:100%; max-height:82vh; border-radius:var(--radius-md); object-fit:contain;">
+            <p id="photo-preview-caption" style="margin:10px 0 0; text-align:center; color:#fff; font-size:14px;"></p>
+        </div>
+    </div>
+
     {{-- PRIVACY DISCLAIMER --}}
     <div class="alert info" style="margin-top:24px;">
         <i class="fa-solid fa-shield-halved fa-lg"></i>
@@ -353,6 +397,22 @@
     </div>
 
     @push('scripts')
+        <script>
+            function openPhotoPreview(source, caption) {
+                document.getElementById('photo-preview-image').src = source;
+                document.getElementById('photo-preview-image').alt = caption;
+                document.getElementById('photo-preview-caption').textContent = caption;
+                document.getElementById('photo-preview-modal').style.display = 'flex';
+            }
+
+            function closePhotoPreview() {
+                document.getElementById('photo-preview-modal').style.display = 'none';
+            }
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') closePhotoPreview();
+            });
+        </script>
         @if($house->latitude !== null && $house->longitude !== null)
             <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
             <script>

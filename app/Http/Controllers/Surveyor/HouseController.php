@@ -127,6 +127,10 @@ class HouseController extends Controller
         $house = House::create([
             ...$validated,
 
+            'house_code' => $service->generateUniqueCode(
+                $validated['region_id']
+            ),
+
             'created_by' => auth()->id(),
 
             'updated_by' => auth()->id(),
