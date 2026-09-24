@@ -1,7 +1,7 @@
 <x-layouts.app title="Beranda">
 
     {{-- HERO SECTION --}}
-    <section class="hero" id="heroSection">
+    <section class="hero home-hero" id="heroSection">
         <div class="hero-glow"></div>
 
         <div>

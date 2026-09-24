@@ -135,6 +135,7 @@ body {
   background-size: 24px 24px;
   color: var(--text-main);
   transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
 }
 
 
@@ -338,6 +339,18 @@ body {
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: local;
+}
+
+/* Beranda: hero dibuat full-bleed dan memenuhi area layar di bawah navbar. */
+.home-hero {
+  width: 100vw;
+  min-height: calc(100svh - 72px);
+  margin-top: -20px;
+  margin-bottom: 0;
+  padding: 72px max(32px, calc((100vw - 1160px) / 2));
+  border-radius: 0;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 /* Overlay warna di atas gambar — berubah sesuai tema */
@@ -1190,12 +1203,25 @@ tbody tr:hover {
     padding: 48px 20px 44px 20px;
     background-position: center top;
   }
+
+  .home-hero {
+    min-height: calc(100svh - 72px);
+    margin-top: -20px;
+    padding: 48px 20px;
+  }
 }
 
 @media (max-width: 600px) {
   .hero {
     padding: 40px 16px 36px 16px;
     border-radius: var(--radius-md);
+  }
+
+  .home-hero {
+    min-height: calc(100svh - 72px);
+    margin-top: -20px;
+    padding: 40px 16px;
+    border-radius: 0;
   }
 
   .hero-theme-toggle {
@@ -1500,5 +1526,4 @@ html.dark .stat-widget-icon.rose    { background: rgba(225,29,72,0.15); }
   color: #10b981;
   border-color: rgba(16, 185, 129, 0.4);
 }
-
 
